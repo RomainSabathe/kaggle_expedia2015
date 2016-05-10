@@ -2,7 +2,7 @@ import os
 import pandas as pd
 from data_cleaning import complete_cleaning
 
-def import_raw_data(train_or_test='train', source='csv'):
+def import_raw_data(train_or_test='train', by_chunk=True, source='csv'):
     """
     Returns a dataframe that has not been cleaned.
     train_or_test: can take the values 'train' or 'test'.
@@ -23,16 +23,21 @@ def import_raw_data(train_or_test='train', source='csv'):
     #TODO: better handling of this error?
     date_parser = lambda x: pd.to_datetime(x, errors='coerce') # to avoid
         # "ValueError: day is out of range" that sometimes occur (srch_ci)
+
+    # Setting up the parameters of the csv reading
+    parameters = {'delimiter':',',
+                  'header':0,
+                  'verbose':False,
+                  'parse_dates':columns_dates,
+                  'infer_datetime_format':True,
+                  'date_parser':date_parser,
+                  'warn_bad_lines':True,
+                  'engine':'c',}
+    if by_chunk:
+        parameters['chunksize'] = 10000
+
     if source == 'csv':
-        data = pd.read_csv(filename,
-                           delimiter=',',
-                           header=0,
-                           verbose=False,
-                           parse_dates=columns_dates,
-                           infer_datetime_format=True,
-                           date_parser=date_parser,
-                           warn_bad_lines=True,
-                           engine='c')
+        data = pd.read_csv(filename, **parameters)
 
     return data
 
@@ -43,7 +48,7 @@ def import_cleaned_data(train_or_test='train'):
     train_or_test: can take the values 'train' or 'test'.
     """
     #TODO: implement the HDFS loading
-    data = import_raw_data(train_or_test)
+    data = import_raw_data(train_or_test, by_chunk=False)
     data = complete_cleaning(data)
 
     return data
@@ -55,14 +60,19 @@ def import_features_and_target(train_or_test='train'):
     target values (y) when asked for the train dataset. None is returned
     otherwise.
     """
-    df = import_cleaned_data(train_or_test)
+    df = import_cleaned_data(train_or_test, by_chunk=False)
+
+    return get_features_and_target(df)
+
+
+def get_features_and_target(df):
+    """
+    Takes a full dataset as argument and returns the corresponding X (features)
+    and y (target) dataframes.
+    """
     X = df.iloc[:, df.columns != 'hotel_cluster']
-    y = df.iloc[:, 'hotel_cluster'] if train_or_test=='train' else None
 
-    return X,y
+    # Deals with the case where the dataframe is the test one
+    y = df['hotel_cluster'] if 'hotel_cluster' in df.columns  else None
 
-df_train = import_raw_data('train')
-df_test  = import_cleaned_data('test')
-df_train.info()
-df_test.info()
-import pdb; pdb.set_trace()
+    return X, y

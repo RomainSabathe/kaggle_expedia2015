@@ -86,9 +86,8 @@ def clean_dtypes(df):
             df[column] = df[column].astype('category', ordered=False)
 
     for column in as_int64:
-        #TODO: check that 'fillna' is legitimate here.
         if column_exists(column, df):
-            df[column] = df[column].fillna(0)
+            #TODO: error here
             df[column] = df[column].astype('int64')
 
     for column in as_bool:
@@ -103,6 +102,9 @@ def complete_cleaning(df):
     df = clean_srch_co(df)
 
     df = clean_dtypes(df)
+
+    #TODO: handle more properly missing data
+    df = df.fillna(0)
 
     return df
 
