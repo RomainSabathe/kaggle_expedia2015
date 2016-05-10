@@ -1,3 +1,4 @@
+import os
 import pandas as pd
 from data_cleaning import complete_cleaning
 
@@ -8,12 +9,13 @@ def import_raw_data(train_or_test='train', source='csv'):
     source: can take the values 'csv' or 'HDFS'.
     """
     #TODO: implement the HDFS loading
-    raw_data_folder = '../Raw data/'
+    raw_data_folder = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                                   '../Raw data/')
     if train_or_test == 'train':
-        filename = raw_data_folder + 'short_train.csv'
+        filename = os.path.join(raw_data_folder,  './short_train.csv')
         columns_dates = [0, 11, 12]  # for parsing
     elif train_or_test == 'test':
-        filename = raw_data_folder + 'short_test.csv'
+        filename = os.path.join(raw_data_folder, './short_test.csv')
         columns_dates = [1, 12, 13]  # for parsing
     else:
         raise Exception('Unknown dataset: %s' % train_or_test)
@@ -58,3 +60,9 @@ def import_features_and_target(train_or_test='train'):
     y = df.iloc[:, 'hotel_cluster'] if train_or_test=='train' else None
 
     return X,y
+
+df_train = import_raw_data('train')
+df_test  = import_cleaned_data('test')
+df_train.info()
+df_test.info()
+import pdb; pdb.set_trace()
