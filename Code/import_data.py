@@ -18,6 +18,9 @@ def import_raw_data(train_or_test='train', source='csv'):
     else:
         raise Exception('Unknown dataset: %s' % train_or_test)
 
+    #TODO: better handling of this error?
+    date_parser = lambda x: pd.to_datetime(x, errors='coerce') # to avoid
+        # "ValueError: day is out of range" that sometimes occur (srch_ci)
     if source == 'csv':
         data = pd.read_csv(filename,
                            delimiter=',',
@@ -25,6 +28,7 @@ def import_raw_data(train_or_test='train', source='csv'):
                            verbose=False,
                            parse_dates=columns_dates,
                            infer_datetime_format=True,
+                           date_parser=date_parser,
                            warn_bad_lines=True,
                            engine='c')
 
@@ -54,10 +58,3 @@ def import_features_and_target(train_or_test='train'):
     y = df.iloc[:, 'hotel_cluster'] if train_or_test=='train' else None
 
     return X,y
-
-#TODO: need to fix the fact that df_test['srch_ci'] is not parsed as a timedate
-df_train = import_raw_data('train')
-df_test  = import_raw_data('test')
-df_train.info()
-df_test.info()
-import pdb; pdb.set_trace()

@@ -1,4 +1,5 @@
 import pandas as pd
+import warnings
 
 def generic_clean_date_time(df, column_name, suffix, include_hours=False):
     """
@@ -14,19 +15,16 @@ def generic_clean_date_time(df, column_name, suffix, include_hours=False):
     """
 
     YEAR_REF = 2013 # used to normalize the years
-    try:
-        if column_exists(column_name, df):
-            df['year_%s' % suffix] = df[column_name].dt.year - YEAR_REF
-            df['month_%s' % suffix] = df[column_name].dt.month
-            df['day_%s' % suffix] = df[column_name].dt.day
+    if column_exists(column_name, df):
+        df['year_%s' % suffix] = df[column_name].dt.year - YEAR_REF
+        df['month_%s' % suffix] = df[column_name].dt.month
+        df['day_%s' % suffix] = df[column_name].dt.day
 
-            if include_hours:
-                df['hour_%s' % suffix] = df[column_name].dt.hour
-                df['minute_%s' % suffix] = df[column_name].dt.minute
+        if include_hours:
+            df['hour_%s' % suffix] = df[column_name].dt.hour
+            df['minute_%s' % suffix] = df[column_name].dt.minute
 
-            df = df.drop(column_name, 1)
-    except:
-        import pdb; pdb.set_trace()
+        df = df.drop(column_name, 1)
 
     return df
 
@@ -118,4 +116,5 @@ def column_exists(column, df):
     if column in df.columns:
         return True
     else:
-        print 'Column %s was ignored because it is missing.' % column
+        print "WARNING: Column '%s' was ignored because it is missing." % column
+        return False
